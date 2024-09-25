@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -8,6 +8,19 @@
 
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="BLL\Interfaces\" />
+    <Folder Include="BLL\Services\" />
+    <Folder Include="BLL\Models\" />
+    <Folder Include="DAL\Interfaces\" />
+    <Folder Include="DAL\Relational\" />
+    <Folder Include="DAL\FileStorage\" />
+    <Folder Include="DAL\Factory\" />
+    <Folder Include="Client\" />
+    <Folder Include="Configuration\" />
+    <Folder Include="DataBase\" />
   </ItemGroup>
 
 </Project>
