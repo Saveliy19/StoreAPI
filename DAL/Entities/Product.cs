@@ -2,7 +2,7 @@
 
 namespace DAL.Entities
 {
-    internal class Product: IEntity
+    public class Product: IEntity
     {
         public string Name { get; set; }
 

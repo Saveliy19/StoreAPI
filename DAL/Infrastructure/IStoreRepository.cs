@@ -2,7 +2,7 @@
 
 namespace DAL.Infrastructure
 {
-    internal interface IStoreRepository
+    public interface IStoreRepository
     {
         // создание нового магазина
         void Create(Store store);

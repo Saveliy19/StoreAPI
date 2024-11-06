@@ -2,7 +2,7 @@
 
 namespace DAL.Infrastructure
 {
-    internal interface IProductRepository
+    public interface IProductRepository
     {
         // создание без привязки к магазину
         public void Create(Product product);

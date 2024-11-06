@@ -2,7 +2,7 @@
 
 namespace DAL.Entities
 {
-    internal class Store: IEntity
+    public class Store: IEntity
     {
         public int Id { get; set; }
         public string Name { get; set; }
