@@ -7,13 +7,6 @@ namespace DAL.Infrastructure
         // создание без привязки к магазину
         public void Create(Product product);
         
-        // Добавляем продукты в магазин
-        public void AddToStore(Store store);
-
-        // убираем продукты из магазина
-        public void RemoveFromStore(Store store);
-
-
         // получение информации (количество, стоимость/ед.) в конкретном магазине
         public Product Get(Product product);
 
