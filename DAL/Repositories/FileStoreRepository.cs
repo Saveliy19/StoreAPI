@@ -3,31 +3,17 @@ using DAL.Infrastructure;
 
 namespace DAL.Repositories
 {
-    internal class FileStoreRepository : IRepository<Store>
+    internal class FileStoreRepository : IStoreRepository
     {
-        void IRepository<Store>.Create(Store entity)
+        private string _storePath;
+        private IProductRepository _productRepository;
+
+        public FileStoreRepository(string storePath, IProductRepository productRepository)
         {
-            throw new NotImplementedException();
+            if (!File.Exists(storePath)) File.Create(storePath).Close();
+            _storePath = storePath;
+            _productRepository = productRepository;
         }
 
-        IEnumerable<Store> IRepository<Store>.Find(Func<Store, bool> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        Store IRepository<Store>.Get(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        IEnumerable<Store> IRepository<Store>.GetAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        void IRepository<Store>.Update(Store entity)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

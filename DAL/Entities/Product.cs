@@ -9,5 +9,7 @@ namespace DAL.Entities
         public int Count { get; set; }
 
         public int Cost { get; set; }
+
+        public int StoreId { get; set; }
     }
 }
