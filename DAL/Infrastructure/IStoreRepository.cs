@@ -4,6 +4,9 @@ namespace DAL.Infrastructure
 {
     public interface IStoreRepository
     {
+        // получение списка всех существующих магазинов
+        List<Store> GetAll();
+
         // создание нового магазина
         void Create(Store store);
 

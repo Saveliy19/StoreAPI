@@ -1,5 +1,6 @@
 ﻿using DAL.Entities;
 using DAL.Infrastructure;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace DAL.Repositories
 {
@@ -163,5 +164,33 @@ namespace DAL.Repositories
             return store;
         }
 
+        public List<Store> GetAll()
+        {
+            var stores = new List<Store>();
+
+            List<List<string>> storesData = new List<List<string>>();
+
+            using (var reader = new StreamReader(_storePath))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var values = new List<string>(line.Split(','));
+                    storesData.Add(values);
+                }
+            }
+
+            foreach (var row in storesData)
+            {
+                var store = new Store();
+
+                store.Id = int.Parse(row[0]);
+                store.Name = row[1];
+                store.Address = row[2];
+                stores.Add(store);
+            }
+
+            return stores;
+        }
     }
 }
