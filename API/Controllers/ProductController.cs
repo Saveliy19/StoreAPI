@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class ProductController : ControllerBase
     {
@@ -17,6 +17,8 @@ namespace API.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
         public IActionResult CreateProduct([FromBody] NewProduct product)
         {
             if (product == null || string.IsNullOrEmpty(product.Name))
@@ -32,30 +34,55 @@ namespace API.Controllers
 
             catch (Exception ex)
             {
-                return StatusCode(500, "Ошибка при создании продукта.");
+                return StatusCode(500, "An error occurred on the server.");
             }
         }
 
 
         [HttpGet("cheapest-store")]
-
+        [ProducesResponseType(typeof(Models.CheapestLocation), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public IActionResult GetCheapestStore([FromQuery] Dictionary<string, int> products)
         {
             if (products == null || products.Count == 0)
             {
-                return BadRequest("'items' required.");
+                return BadRequest("Parameter 'items' is required.");
             }
 
-            var bllProducts = new List<BLL.DTO.Product>();
-
-            foreach (var product in products) 
+            try
             {
-                bllProducts.Add(new BLL.DTO.Product { Name = product.Key, Quantity = product.Value });
+                var bllProducts = products.Select(product =>
+                    new BLL.DTO.Product { Name = product.Key, Quantity = product.Value }).ToList();
+
+                var cheapestStore = _storeService.GetBestPriceLocation(bllProducts);
+
+                if (cheapestStore == null)
+                {
+                    return NotFound("No store has all requested products.");
+                }
+
+                var response = new Models.CheapestLocation
+                {
+                    PriceSumm = cheapestStore.PriceSumm,
+                    Store = new Models.Store
+                    {
+                        Id = cheapestStore.Store.Id,
+                        Name = cheapestStore.Store.Name,
+                        Address = cheapestStore.Store.Address
+                    }
+                };
+
+                return Ok(response);
             }
-
-            var cheapestStore = _storeService.GetBestPriceLocation(bllProducts);
-
-            return Ok(cheapestStore);
+            catch (Exception ex)
+            {
+                // _logger.LogError(ex, "An error occurred while fetching the cheapest store.");
+                return StatusCode(500, "An error occurred on the server.");
+            }
         }
+
+
     }
 }
