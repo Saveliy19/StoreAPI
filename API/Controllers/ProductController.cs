@@ -39,20 +39,23 @@ namespace API.Controllers
 
         [HttpGet("cheapest-store")]
 
-        public IActionResult GetCheapestStore([FromQuery] Dictionary<string, int> items)
+        public IActionResult GetCheapestStore([FromQuery] Dictionary<string, int> products)
         {
-            if (items == null || items.Count == 0)
+            if (products == null || products.Count == 0)
             {
                 return BadRequest("'items' required.");
             }
 
-            return Ok(new
+            var bllProducts = new List<BLL.DTO.Product>();
+
+            foreach (var product in products) 
             {
-                
-            });
+                bllProducts.Add(new BLL.DTO.Product { Name = product.Key, Quantity = product.Value });
+            }
+
+            var cheapestStore = _storeService.GetBestPriceLocation(bllProducts);
+
+            return Ok(cheapestStore);
         }
-
-
-
     }
 }

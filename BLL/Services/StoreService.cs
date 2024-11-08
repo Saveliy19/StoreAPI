@@ -64,7 +64,7 @@ namespace BLL.Services
             return bllStore;
         }
 
-        public BLL.DTO.Store GetBestPriceLocation(List<DTO.Product> products)
+        public BLL.DTO.BestPriceLocation GetBestPriceLocation(List<DTO.Product> products)
         {
 
             var dalStores = _storeRepository.GetAll();
@@ -131,7 +131,7 @@ namespace BLL.Services
                 }
             }
                         
-            return bestStore;
+            return new DTO.BestPriceLocation() { PriceSumm = bestCost, Store = bestStore };
         }
     }
 }

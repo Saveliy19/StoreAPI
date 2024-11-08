@@ -20,6 +20,6 @@ namespace BLL.Infrasructure
         public Store CalculateAffordableItems(Store store, int cache);
 
         // поиск магазина, где дешевле всего набор товаров
-        public DTO.Store GetBestPriceLocation(List<DTO.Product> products);
+        public DTO.BestPriceLocation GetBestPriceLocation(List<DTO.Product> products);
     }
 }

@@ -180,15 +180,19 @@ namespace DAL.Repositories
                 }
             }
 
-            foreach (var row in storesData)
+            if (storesData.Count > 0)
             {
-                var store = new Store();
+                foreach (var row in storesData)
+                {
+                    var store = new Store();
 
-                store.Id = int.Parse(row[0]);
-                store.Name = row[1];
-                store.Address = row[2];
-                stores.Add(store);
+                    store.Id = int.Parse(row[0]);
+                    store.Name = row[1];
+                    store.Address = row[2];
+                    stores.Add(store);
+                }
             }
+            
 
             return stores;
         }
