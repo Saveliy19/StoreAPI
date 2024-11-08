@@ -66,72 +66,65 @@ namespace BLL.Services
 
         public BLL.DTO.BestPriceLocation GetBestPriceLocation(List<DTO.Product> products)
         {
-
             var dalStores = _storeRepository.GetAll();
 
-            Dictionary<int, int> storeSumm = new Dictionary<int, int>();
-            Dictionary<int, int> storeProductsCount = new Dictionary<int, int>();
+            // Используем Dictionary для хранения общей суммы и количества товаров по каждому магазину
+            Dictionary<int, int> storeSums = new Dictionary<int, int>();
+            Dictionary<int, int> storeProductCounts = new Dictionary<int, int>();
 
-            // количество позиций продуктов
-            int positionsCount = 0;
+            // Общее количество позиций продуктов, которые нужно купить
+            int positionsCount = products.Count;
 
-            foreach (var product in products)
-            {
-                positionsCount++;
-            }
-
+            // Инициализируем суммы и счетчики для всех магазинов
             foreach (var store in dalStores)
             {
-                storeSumm[store.Id] = 0;
-                storeProductsCount[store.Id] = 0;
+                storeSums[store.Id] = 0;
+                storeProductCounts[store.Id] = 0;
             }
 
-
+            // Рассчитываем сумму стоимости товаров в каждом магазине
             foreach (var product in products)
             {
                 var dalProduct = _storeMapper.MapProduct(product);
-                var storePrice = _productRepository.GetProductCosts(dalProduct);
+                var storePrices = _productRepository.GetProductCosts(dalProduct);
 
-                foreach (KeyValuePair<int, int> entry in storePrice)
+                foreach (var entry in storePrices)
                 {
-                    try
+                    int storeId = entry.Key;
+                    int pricePerUnit = entry.Value;
+
+                    // Добавляем сумму за этот товар и увеличиваем счётчик товаров, доступных в магазине
+                    if (storeSums.ContainsKey(storeId))
                     {
-                        storeSumm[entry.Key] += entry.Value * dalProduct.Count;
-                        storeProductsCount[entry.Key]++;
+                        storeSums[storeId] += pricePerUnit * dalProduct.Count;
+                        storeProductCounts[storeId]++;
                     }
-                    
-                    catch 
-                    {
-                        continue;
-                    }
-
                 }
             }
 
-            int bestId = 0;
-            int bestCost = 0;
+            // Поиск магазина с наименьшей стоимостью, учитывая только те магазины, где доступны все товары
+            int bestStoreId = -1;
+            int lowestCost = int.MaxValue;
 
-            foreach (KeyValuePair<int, int> entry in storeSumm)
+            foreach (var storeId in storeSums.Keys)
             {
-                if (storeSumm[entry.Key] <= bestCost && storeProductsCount[entry.Key] == positionsCount)
+                if (storeProductCounts[storeId] == positionsCount && storeSums[storeId] < lowestCost)
                 {
-                    bestCost = storeSumm[entry.Key];
-                    bestId = entry.Key;
+                    lowestCost = storeSums[storeId];
+                    bestStoreId = storeId;
                 }
             }
 
-            var bestStore = new BLL.DTO.Store();
-
-            foreach (var dalStore in dalStores)
+            // Если подходящего магазина не найдено, возвращаем null или можно бросить исключение, если это уместно
+            if (bestStoreId == -1)
             {
-                if (dalStore.Id == bestId)
-                {
-                    bestStore = _storeMapper.MapStore(dalStore);
-                    break;
-                }
+                return null;
             }
-                        
-            return new DTO.BestPriceLocation() { PriceSumm = bestCost, Store = bestStore };
+
+            // Находим данные для лучшего магазина и возвращаем результат
+            var bestStore = _storeMapper.MapStore(dalStores.FirstOrDefault(s => s.Id == bestStoreId));
+            return new DTO.BestPriceLocation { PriceSumm = lowestCost, Store = bestStore };
         }
+
     }
 }

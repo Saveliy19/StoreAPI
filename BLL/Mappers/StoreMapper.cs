@@ -54,13 +54,17 @@ namespace BLL.Mappers
         {
             var bllProducts = new List<DTO.Product>();
 
-            foreach (var product in store.Products)
+
+            if (!(store.Products is null))
             {
-                var bllProduct = MapProduct(product);
+                foreach (var product in store.Products)
+                {
+                    var bllProduct = MapProduct(product);
 
-                bllProducts.Add(bllProduct);
+                    bllProducts.Add(bllProduct);
+                }
             }
-
+            
             var bllStore = new DTO.Store
             {
                 Id = store.Id,

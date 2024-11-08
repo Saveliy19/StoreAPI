@@ -7,7 +7,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Data\store_products.csv" />
+    <None Remove="Data\products.csv" />
+    <None Remove="Data\store.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Data\store.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Data\store_products.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Data\products.csv" />
   </ItemGroup>
 
 </Project>
