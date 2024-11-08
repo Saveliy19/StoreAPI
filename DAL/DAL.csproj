@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Data\store_products.csv" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="Data\store_products.csv" />
   </ItemGroup>
 

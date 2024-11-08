@@ -2,7 +2,7 @@
 
 namespace BLL.Mappers
 {
-    internal class StoreMapper: IStoreMapper
+    public class StoreMapper: IStoreMapper
     {
         public DAL.Entities.Product MapProduct(BLL.DTO.Product product)
         {

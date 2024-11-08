@@ -4,7 +4,7 @@ using static System.Formats.Asn1.AsnWriter;
 
 namespace DAL.Repositories
 {
-    internal class FileProductRepository : IProductRepository
+    public class FileProductRepository : IProductRepository
     {
         private string _productPath;
         private string _storeProductsPath;
@@ -36,7 +36,7 @@ namespace DAL.Repositories
 
             productsData.Add(product.Name);
 
-            using (var writer = new StreamWriter(_storeProductsPath))
+            using (var writer = new StreamWriter(_productPath))
             {
                 foreach (var row in productsData)
                 {

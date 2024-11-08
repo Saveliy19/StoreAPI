@@ -4,7 +4,7 @@ using static System.Formats.Asn1.AsnWriter;
 
 namespace DAL.Repositories
 {
-    internal class FileStoreRepository : IStoreRepository
+    public class FileStoreRepository : IStoreRepository
     {
         private string _storePath;
         private string _storeProductsPath;

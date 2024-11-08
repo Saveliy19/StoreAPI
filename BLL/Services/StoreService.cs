@@ -6,7 +6,7 @@ using DAL.Infrastructure;
 
 namespace BLL.Services
 {
-    internal class StoreService: IStoreService
+    public class StoreService: IStoreService
     {
         private IStoreRepository _storeRepository;
         private IProductRepository _productRepository;
