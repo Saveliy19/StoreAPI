@@ -21,9 +21,9 @@ namespace API.Controllers
         [ProducesResponseType(500)]
         public IActionResult CreateProduct([FromBody] NewProduct product)
         {
-            if (product == null || string.IsNullOrEmpty(product.Name))
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Необходмо название продукта.");
+                return BadRequest(ModelState);
             }
 
             try
@@ -39,16 +39,16 @@ namespace API.Controllers
         }
 
 
-        [HttpGet("cheapest-store")]
+        [HttpGet("Stores/Cheapest")]
         [ProducesResponseType(typeof(Models.CheapestLocation), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
         public IActionResult GetCheapestStore([FromQuery] Dictionary<string, int> products)
         {
-            if (products == null || products.Count == 0)
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Parameter 'items' is required.");
+                return BadRequest(ModelState);
             }
 
             try

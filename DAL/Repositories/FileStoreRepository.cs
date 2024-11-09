@@ -21,8 +21,8 @@ namespace DAL.Repositories
 
         public void UpdateInStore(Store store, bool sign)
         {
-            // проверяем, что магазин существует
-            Create(store);
+            // если такого мазина не существует
+
 
             // Считываем строки в список строк
             List<List<string>> storeData = new List<List<string>>();
@@ -44,9 +44,12 @@ namespace DAL.Repositories
                 // или создаем его
                 _productRepository.Create(product);
 
+                bool found = false;
+
                 // Поиск нужного товара
                 foreach (var row in storeData)
                 {
+                    
                     if (row[0] == store.Id.ToString() && row[1] == product.Name)
                     {
                         if (sign)
@@ -62,12 +65,12 @@ namespace DAL.Repositories
                             if (currentCount > 0) row[3] = currentCount.ToString();
                             else row[3] = "0";
                         }
-
-                        return;
+                        found = true;
+                        break;
                     }
                 }
 
-                if (sign)
+                if (sign && !found)
                 {
                     var newRow = new List<string>
                     {
@@ -116,11 +119,6 @@ namespace DAL.Repositories
                 }
             }
 
-            foreach (var row in storesData)
-            {
-                if (row[1] == store.Name) return;
-            }
-
             var newStore = new List<string>
             {
                 storesData.Count.ToString(),
@@ -129,7 +127,7 @@ namespace DAL.Repositories
             };
             storesData.Add(newStore);
 
-            using (var writer = new StreamWriter(_storeProductsPath))
+            using (var writer = new StreamWriter(_storePath))
             {
                 foreach (var row in storesData)
                 {

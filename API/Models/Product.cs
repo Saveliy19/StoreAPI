@@ -4,10 +4,8 @@
     {
         public string Name { get; set; }
 
-        public int Count { get; set; }
+        public int Quantity { get; set; }
 
         public int Cost { get; set; }
-
-        public int StoreId { get; set; }
     }
 }
