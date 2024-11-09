@@ -32,11 +32,14 @@ namespace BLL.Mappers
         {
             var dalProducts = new List<DAL.Entities.Product>();
 
-            foreach (var product in store.Products)
+            if (!(store.Products is null))
             {
-                var dalProduct = MapProduct(product);
+                foreach (var product in store.Products)
+                {
+                    var dalProduct = MapProduct(product);
 
-                dalProducts.Add(dalProduct);
+                    dalProducts.Add(dalProduct);
+                }
             }
 
             var dalStore = new DAL.Entities.Store
