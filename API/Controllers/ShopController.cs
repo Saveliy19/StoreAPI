@@ -39,6 +39,31 @@ namespace API.Controllers
 
         }
 
+        [HttpGet("{storeId}/Assortment/{cache}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public IActionResult GetAffordableAssortment(int storeId, int cache)
+        {
+            try
+            {
+                var bllStore= _storeService.CalculateAffordableItems(new BLL.DTO.Store() { Id = storeId }, cache);
+                var products = new List<Product>();
+                foreach (var item in bllStore.Products)
+                {
+                    var product = new Product() { Name = item.Name, Cost = item.Cost, Quantity = item.Quantity };
+                    products.Add(product);
+                }
+                return Ok(new AffordableProducts() { Products = products, StoreId = bllStore.Id});
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred on the server.");
+            }
+        }
+
         [HttpPatch("Restock")]
         [ProducesResponseType(201)]
         [ProducesResponseType(400)]
