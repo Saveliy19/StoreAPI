@@ -7,11 +7,11 @@ namespace API.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class ProductController : ControllerBase
+    public class ProductsController : ControllerBase
     {
         private IStoreService _storeService;
 
-        public ProductController(IStoreService storeService)
+        public ProductsController(IStoreService storeService)
         {
             _storeService = storeService;
         }

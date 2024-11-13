@@ -132,5 +132,21 @@ namespace BLL.Services
             return new DTO.BestPriceLocation { PriceSumm = lowestCost, Store = bestStore };
         }
 
+
+        public List<BLL.DTO.Store> GetStores()
+        {
+            var stores = new List<BLL.DTO.Store>();
+
+            var dalStores = _storeRepository.GetAll();
+
+            foreach (var store in dalStores) 
+            {
+                var bllStore = _storeMapper.MapStore(store);
+                stores.Add(bllStore);
+            }
+
+            return stores;
+        }
+
     }
 }
