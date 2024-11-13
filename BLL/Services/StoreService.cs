@@ -164,6 +164,15 @@ namespace BLL.Services
 
         }
 
+        public DTO.Store GetStoreAssortment(DTO.Store store)
+        {
 
+            var dalStore = _storeRepository.Get(_storeMapper.MapStore(store));
+
+            var bllStore = _storeMapper.MapStore(dalStore);
+
+            return bllStore;
+
+        }
     }
 }

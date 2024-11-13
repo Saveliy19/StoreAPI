@@ -42,6 +42,36 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("{storeId}/Assortment")]
+        [ProducesResponseType(typeof(Models.StoreAssortment), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public IActionResult GetStoreAssortment(int storeId)
+        {
+            try
+            {
+                var bllAssortment = _storeService.GetStoreAssortment(new BLL.DTO.Store() { Id = storeId});
+
+                var products = new List<Product>();
+
+
+                foreach (var bllProduct in bllAssortment.Products)
+                {
+                    var product = new Product() { Name = bllProduct.Name, Cost = bllProduct.Cost, Quantity = bllProduct.Quantity };
+                    products.Add(product);
+                }
+
+                return Ok(new StoreAssortment() { Products = products, Id = bllAssortment.Id });
+            }
+
+
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred on the server.");
+            }
+        }
+
+
         [HttpPost]
         [ProducesResponseType(typeof(Models.NewStore), 200)]
         [ProducesResponseType(400)]
@@ -91,7 +121,7 @@ namespace API.Controllers
             }
         }
 
-        [HttpPatch("{storeId}/Restock")]
+        [HttpPatch("{storeId}/Assortment/Restock")]
         [ProducesResponseType(201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
@@ -124,7 +154,7 @@ namespace API.Controllers
         }
 
 
-        [HttpPatch("{storeId}/Purchase")]
+        [HttpPatch("{storeId}/Assortment/Purchase")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
@@ -155,7 +185,7 @@ namespace API.Controllers
                 return BadRequest("Не все продукты имеются в достаточном количестве");
             }
 
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, "An error occurred on the server.");
             }

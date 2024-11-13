@@ -22,8 +22,13 @@ namespace BLL.Infrasructure
         // поиск магазина, где дешевле всего набор товаров
         public DTO.BestPriceLocation GetBestPriceLocation(List<DTO.Product> products);
 
+        // получение ассортимента магазина
+        public DTO.Store GetStoreAssortment(Store store);
+
+        // получение списка магазинов
         public List<DTO.Store> GetStores();
 
+        // получение списка всех продуктов
         public List<DTO.Product> GetProducts();
     }
 }
