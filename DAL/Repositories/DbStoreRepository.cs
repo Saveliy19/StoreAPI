@@ -25,7 +25,7 @@ namespace DAL.Repositories
             throw new NotImplementedException();
         }
 
-        public void RemoveProducts(Store store)
+        int IStoreRepository.RemoveProducts(Store store)
         {
             throw new NotImplementedException();
         }

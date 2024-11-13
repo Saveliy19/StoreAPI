@@ -14,7 +14,7 @@ namespace BLL.Infrasructure
         public void AddProductsToStore(Store store);
 
         // покупка/списание партии товара в магазине
-        public void DeleteProductsFromStore(Store store);
+        public int DeleteProductsFromStore(Store store);
 
         // сколько каких товаров можно купить в магазине на определенную сумму
         public Store CalculateAffordableItems(Store store, int cache);

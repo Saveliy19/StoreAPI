@@ -2,6 +2,7 @@
 using BLL.Infrasructure;
 using BLL.Mappers;
 using DAL.Entities;
+using DAL.Exceptions;
 using DAL.Infrastructure;
 
 namespace BLL.Services
@@ -40,11 +41,16 @@ namespace BLL.Services
             _storeRepository.Create(dalStore);
         }
 
-        public void DeleteProductsFromStore(BLL.DTO.Store store)
+        public int DeleteProductsFromStore(BLL.DTO.Store store)
         {
             var dalStore = _storeMapper.MapStore(store);
 
-            _storeRepository.RemoveProducts(dalStore);
+            try
+            {
+                int summ = _storeRepository.RemoveProducts(dalStore);
+                return summ;
+            }
+            catch (ProductUnavailableException) { throw; }
         }
 
         public BLL.DTO.Store CalculateAffordableItems(BLL.DTO.Store store, int cache)

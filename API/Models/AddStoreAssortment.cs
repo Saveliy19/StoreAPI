@@ -2,7 +2,7 @@
 
 namespace API.Models
 {
-    public class StoreAssortment
+    public class AddStoreAssortment
     {
         [Required(ErrorMessage = "Store Id is required.")]
         public int StoreId { get; set; }

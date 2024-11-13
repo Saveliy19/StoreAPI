@@ -1,4 +1,5 @@
 ﻿using DAL.Entities;
+using DAL.Exceptions;
 using DAL.Infrastructure;
 using static System.Formats.Asn1.AsnWriter;
 
@@ -21,9 +22,6 @@ namespace DAL.Repositories
 
         public void UpdateInStore(Store store, bool sign)
         {
-            // если такого мазина не существует
-
-
             // Считываем строки в список строк
             List<List<string>> storeData = new List<List<string>>();
 
@@ -100,9 +98,58 @@ namespace DAL.Repositories
             UpdateInStore(store, true);
         }
 
-        public void RemoveProducts(Store store)
+        public int RemoveProducts(Store store)
         {
-            UpdateInStore(store, false);
+            int summ = 0;
+
+            // Считываем строки в список строк
+            List<List<string>> storeData = new List<List<string>>();
+
+            using (var reader = new StreamReader(_storeProductsPath))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var values = new List<string>(line.Split(','));
+                    storeData.Add(values);
+                }
+            }
+
+            foreach (var product in store.Products)
+            {
+
+                bool productFound = false;
+
+                foreach (var row in storeData)
+                {
+
+                    if (row[0] == store.Id.ToString() && row[1] == product.Name)
+                    {
+                        productFound = true;
+                        int currentCount = int.Parse(row[3]) - product.Count;
+                        if (currentCount > 0)
+                        {
+                            summ += product.Count * int.Parse(row[2]);
+                            row[3] = currentCount.ToString();
+                        }
+                        else throw new ProductUnavailableException($"Продукт {product.Name} недоступен в нужном количестве");
+                        break;
+                    }
+                }
+
+                if (!productFound) throw new ProductUnavailableException($"Продукт {product.Name} не найден");
+            }
+
+            // Перезапись данных в файл
+            using (var writer = new StreamWriter(_storeProductsPath))
+            {
+                foreach (var row in storeData)
+                {
+                    writer.WriteLine(string.Join(",", row));
+                }
+            }
+
+            return summ;
         }
 
         public void Create(Store store)

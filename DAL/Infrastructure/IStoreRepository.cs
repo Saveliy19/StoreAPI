@@ -17,6 +17,6 @@ namespace DAL.Infrastructure
         public void AddProducts(Store store);
 
         // убираем продукты из магазина
-        public void RemoveProducts(Store store);
+        public int RemoveProducts(Store store);
     }
 }

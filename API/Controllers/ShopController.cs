@@ -1,5 +1,6 @@
 ﻿using API.Models;
 using BLL.Infrasructure;
+using DAL.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -69,7 +70,7 @@ namespace API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public IActionResult UpdateStoreAssortment([FromBody] StoreAssortment storeAssortment)
+        public IActionResult AddStoreAssortment([FromBody] AddStoreAssortment storeAssortment)
         {
             if (!ModelState.IsValid)
             {
@@ -88,12 +89,47 @@ namespace API.Controllers
                 return StatusCode(201);
             }
 
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred on the server.");
+            }
+        }
+
+
+        [HttpPatch("Purchase")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public IActionResult RemoveStoreAssortment([FromBody] DeleteStoreAssortment storeAssortment)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var bllProducts = new List<BLL.DTO.Product>();
+                foreach (var product in storeAssortment.Products)
+                {
+                    var bllProduct = new BLL.DTO.Product() { Name = product.Name, Quantity = product.Quantity };
+                    bllProducts.Add(bllProduct);
+                }
+                int summ = _storeService.DeleteProductsFromStore(new BLL.DTO.Store() { Id = storeAssortment.StoreId, Products = bllProducts });
+                return Ok(summ);
+            }
+
+            catch (ProductUnavailableException) 
+            {
+                return StatusCode(404, "Не все продукты имеются в достаточном количестве");
+            }
+
             catch (Exception ex)
             {
                 return StatusCode(500, "An error occurred on the server.");
             }
         }
 
-        
     }
 }
