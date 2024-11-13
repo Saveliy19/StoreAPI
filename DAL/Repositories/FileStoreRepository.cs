@@ -137,7 +137,7 @@ namespace DAL.Repositories
                     }
                 }
 
-                if (!productFound) throw new ProductUnavailableException($"Продукт {product.Name} не найден");
+                if (!productFound) throw new ProductUnavailableException($"Продукт {product.Name} не продается в магазине {product.StoreId}");
             }
 
             // Перезапись данных в файл

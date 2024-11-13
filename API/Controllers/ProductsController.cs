@@ -1,4 +1,5 @@
 ﻿using API.Models;
+using BLL.Exceptions;
 using BLL.Infrasructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -102,6 +103,11 @@ namespace API.Controllers
 
                 return Ok(response);
             }
+            catch (ProductUnavailableException ex)
+            {
+                return NotFound(ex.Message);
+            }
+
             catch (Exception ex)
             {
                 // _logger.LogError(ex, "An error occurred while fetching the cheapest store.");

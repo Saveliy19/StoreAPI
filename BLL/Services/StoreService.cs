@@ -1,4 +1,5 @@
 ﻿using BLL.DTO;
+using BLL.Exceptions;
 using BLL.Infrasructure;
 using BLL.Mappers;
 using DAL.Entities;
@@ -20,8 +21,24 @@ namespace BLL.Services
             _storeMapper = storeMapper;
         }
 
+        private bool ChechStoreExistence(DTO.Store store)
+        {
+            bool found = false;
+
+            var dalStores = _storeRepository.GetAll();
+
+            foreach (var dalStore in dalStores)
+            {
+                if (dalStore.Id == store.Id) { found = true; break; }
+            }
+
+            return found;
+        }
+
         public void AddProductsToStore(BLL.DTO.Store store)
         {
+            if (!ChechStoreExistence(store)) { throw new StoreNotExistException($"Магазина {store.Id} не существует!"); }
+
             var dalStore = _storeMapper.MapStore(store);
 
             _storeRepository.AddProducts(dalStore);
@@ -43,6 +60,8 @@ namespace BLL.Services
 
         public int DeleteProductsFromStore(BLL.DTO.Store store)
         {
+            if (!ChechStoreExistence(store)) { throw new StoreNotExistException($"Магазина {store.Id} не существует!"); }
+
             var dalStore = _storeMapper.MapStore(store);
 
             try
@@ -50,24 +69,33 @@ namespace BLL.Services
                 int summ = _storeRepository.RemoveProducts(dalStore);
                 return summ;
             }
-            catch (ProductUnavailableException) { throw; }
+            catch (DAL.Exceptions.ProductUnavailableException ex) { throw new BLL.Exceptions.ProductUnavailableException(ex.Message); }
         }
 
         public BLL.DTO.Store CalculateAffordableItems(BLL.DTO.Store store, int cache)
         {
 
-            var assortment = _storeRepository.Get(_storeMapper.MapStore(store));
+            if (!ChechStoreExistence(store)) { throw new StoreNotExistException($"Магазина {store.Id} не существует!"); }
 
-            foreach (var product in assortment.Products)
+            try
             {
-                int count = cache / product.Cost;
+                var assortment = _storeRepository.Get(_storeMapper.MapStore(store));
 
-                if (count <= product.Count) product.Count = count;
+                foreach (var product in assortment.Products)
+                {
+                    int count = cache / product.Cost;
+
+                    if (count <= product.Count) product.Count = count;
+                }
+
+                var bllStore = _storeMapper.MapStore(assortment);
+
+                return bllStore;
             }
 
-            var bllStore = _storeMapper.MapStore(assortment);
+            catch (DAL.Exceptions.ProductNotExistException ex) { throw new BLL.Exceptions.ProductNotExistException(ex.Message); }
 
-            return bllStore;
+            
         }
 
         public BLL.DTO.BestPriceLocation GetBestPriceLocation(List<DTO.Product> products)
@@ -88,25 +116,31 @@ namespace BLL.Services
                 storeProductCounts[store.Id] = 0;
             }
 
-            // Рассчитываем сумму стоимости товаров в каждом магазине
-            foreach (var product in products)
+            try
             {
-                var dalProduct = _storeMapper.MapProduct(product);
-                var storePrices = _productRepository.GetProductCosts(dalProduct);
-
-                foreach (var entry in storePrices)
+                // Рассчитываем сумму стоимости товаров в каждом магазине
+                foreach (var product in products)
                 {
-                    int storeId = entry.Key;
-                    int pricePerUnit = entry.Value;
+                    var dalProduct = _storeMapper.MapProduct(product);
+                    var storePrices = _productRepository.GetProductCosts(dalProduct);
 
-                    // Добавляем сумму за этот товар и увеличиваем счётчик товаров, доступных в магазине
-                    if (storeSums.ContainsKey(storeId))
+                    foreach (var entry in storePrices)
                     {
-                        storeSums[storeId] += pricePerUnit * dalProduct.Count;
-                        storeProductCounts[storeId]++;
+                        int storeId = entry.Key;
+                        int pricePerUnit = entry.Value;
+
+                        // Добавляем сумму за этот товар и увеличиваем счётчик товаров, доступных в магазине
+                        if (storeSums.ContainsKey(storeId))
+                        {
+                            storeSums[storeId] += pricePerUnit * dalProduct.Count;
+                            storeProductCounts[storeId]++;
+                        }
                     }
                 }
             }
+
+            catch (DAL.Exceptions.ProductUnavailableException ex) { throw new BLL.Exceptions.ProductUnavailableException(ex.Message); }
+
 
             // Поиск магазина с наименьшей стоимостью, учитывая только те магазины, где доступны все товары
             int bestStoreId = -1;
@@ -121,13 +155,12 @@ namespace BLL.Services
                 }
             }
 
-            // Если подходящего магазина не найдено, возвращаем null или можно бросить исключение, если это уместно
+            // Если подходящего магазина не найдено
             if (bestStoreId == -1)
             {
-                return null;
+                throw new StoreNotExistException("Не найдено магазина, в котором можно купить все перечисленные товары");
             }
 
-            // Находим данные для лучшего магазина и возвращаем результат
             var bestStore = _storeMapper.MapStore(dalStores.FirstOrDefault(s => s.Id == bestStoreId));
             return new DTO.BestPriceLocation { PriceSumm = lowestCost, Store = bestStore };
         }
@@ -166,6 +199,7 @@ namespace BLL.Services
 
         public DTO.Store GetStoreAssortment(DTO.Store store)
         {
+            if (!ChechStoreExistence(store)) { throw new StoreNotExistException($"Магазина {store.Id} не существует!"); }
 
             var dalStore = _storeRepository.Get(_storeMapper.MapStore(store));
 

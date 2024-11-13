@@ -1,4 +1,5 @@
 ﻿using DAL.Entities;
+using DAL.Exceptions;
 using DAL.Infrastructure;
 using static System.Formats.Asn1.AsnWriter;
 
@@ -65,11 +66,12 @@ namespace DAL.Repositories
                 }
             }
 
-            throw new Exception("Такого продукта не существует!");
+            throw new ProductNotExistException($"Продукта {product.Name} не продается в магазине {product.StoreId}");
         }
 
         public Dictionary<int, int> GetProductCosts(Product product)
         {
+            bool found = false;
             Dictionary<int, int> productCosts = new Dictionary<int, int>();
             using (var reader = new StreamReader(_storeProductsPath))
             {
@@ -80,9 +82,12 @@ namespace DAL.Repositories
                     if (product.Name == values[1])
                     {
                         productCosts[int.Parse(values[0])] = int.Parse(values[2]);
+                        found = true;
                     }
                 }
             }
+
+            if (!found) throw new ProductUnavailableException($"Продукт {product.Name} нигде не продается!");
 
             return productCosts;
         }

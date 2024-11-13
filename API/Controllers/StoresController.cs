@@ -1,6 +1,6 @@
 ﻿using API.Models;
+using BLL.Exceptions;
 using BLL.Infrasructure;
-using DAL.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -64,6 +64,11 @@ namespace API.Controllers
                 return Ok(new StoreAssortment() { Products = products, Id = bllAssortment.Id });
             }
 
+            catch (StoreNotExistException ex)
+            {
+                return NotFound(ex.Message);
+            }
+
 
             catch (Exception)
             {
@@ -115,6 +120,11 @@ namespace API.Controllers
                 return Ok(new AffordableProducts() { Products = products, StoreId = bllStore.Id });
             }
 
+            catch (StoreNotExistException ex)
+            {
+                return NotFound(ex.Message);
+            }
+
             catch (Exception ex)
             {
                 return StatusCode(500, "An error occurred on the server.");
@@ -145,6 +155,11 @@ namespace API.Controllers
                 }
                 _storeService.AddProductsToStore(new BLL.DTO.Store() { Id = storeId, Products = bllProducts });
                 return StatusCode(201);
+            }
+
+            catch (StoreNotExistException ex)
+            {
+                return NotFound(ex.Message);
             }
 
             catch (Exception)
@@ -180,9 +195,14 @@ namespace API.Controllers
                 return Ok(summ);
             }
 
-            catch (ProductUnavailableException) 
+            catch (StoreNotExistException ex)
             {
-                return BadRequest("Не все продукты имеются в достаточном количестве");
+                return NotFound(ex.Message);
+            }
+
+            catch (ProductUnavailableException ex) 
+            {
+                return BadRequest(ex.Message);
             }
 
             catch (Exception)
