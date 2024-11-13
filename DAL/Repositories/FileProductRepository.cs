@@ -87,6 +87,24 @@ namespace DAL.Repositories
             return productCosts;
         }
 
+        public List<Product> GetAll() 
+        {
+            var products = new List<Product>();
+
+            using (var reader = new StreamReader(_productPath))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+
+                    var product = new Product() { Name = line };
+                    products.Add(product);
+                }
+            }
+
+            return products;
+        }
+
         
     }
 }

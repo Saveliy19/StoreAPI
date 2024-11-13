@@ -38,6 +38,32 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet]
+        [ProducesResponseType(typeof(List<Models.NewProduct>), 200)]
+        [ProducesResponseType(500)]
+        public IActionResult GetAllProducts() 
+        {
+            try
+            {
+                var products = new List<Models.NewProduct>();
+
+                var bllProducts = _storeService.GetProducts();
+
+                foreach (var product in bllProducts) 
+                {
+                    var new_product = new Models.NewProduct { Name = product.Name };
+                    products.Add(new_product);
+                }
+
+                return Ok(products);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred on the server.");
+            }
+        }
+
 
         [HttpGet("Stores/Cheapest")]
         [ProducesResponseType(typeof(Models.CheapestLocation), 200)]

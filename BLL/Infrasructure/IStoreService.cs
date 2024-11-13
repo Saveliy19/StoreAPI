@@ -23,5 +23,7 @@ namespace BLL.Infrasructure
         public DTO.BestPriceLocation GetBestPriceLocation(List<DTO.Product> products);
 
         public List<DTO.Store> GetStores();
+
+        public List<DTO.Product> GetProducts();
     }
 }

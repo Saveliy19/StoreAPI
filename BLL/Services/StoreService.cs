@@ -148,5 +148,22 @@ namespace BLL.Services
             return stores;
         }
 
+        public List<BLL.DTO.Product> GetProducts()
+        {
+            var products = new List<BLL.DTO.Product>();
+
+            var dalProducts = _productRepository.GetAll();
+
+            foreach (var product in dalProducts)
+            {
+                var bllProduct = _storeMapper.MapProduct(product);
+                products.Add(bllProduct);
+            }
+
+            return products;
+
+        }
+
+
     }
 }

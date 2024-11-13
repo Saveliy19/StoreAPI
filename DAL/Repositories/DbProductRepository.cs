@@ -15,6 +15,11 @@ namespace DAL.Repositories
             throw new NotImplementedException();
         }
 
+        public List<Product> GetAll()
+        {
+            throw new NotImplementedException();
+        }
+
         public Dictionary<int, int> GetProductCosts(Product product)
         {
             throw new NotImplementedException();

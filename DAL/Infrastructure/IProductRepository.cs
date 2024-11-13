@@ -4,6 +4,9 @@ namespace DAL.Infrastructure
 {
     public interface IProductRepository
     {
+        // Получение всех продуктов
+        public List<Product> GetAll();
+
         // создание без привязки к магазину
         public void Create(Product product);
         
