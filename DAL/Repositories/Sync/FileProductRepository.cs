@@ -1,11 +1,11 @@
 ﻿using DAL.Entities;
 using DAL.Exceptions;
-using DAL.Infrastructure;
+using DAL.Repositories.Interfaces;
 using static System.Formats.Asn1.AsnWriter;
 
-namespace DAL.Repositories
+namespace DAL.Repositories.Sync
 {
-    public class FileProductRepository : IProductRepository
+    public class FileProductRepository : ISyncProductRepository
     {
         private string _productPath;
         private string _storeProductsPath;
@@ -92,7 +92,7 @@ namespace DAL.Repositories
             return productCosts;
         }
 
-        public List<Product> GetAll() 
+        public List<Product> GetAll()
         {
             var products = new List<Product>();
 
@@ -110,6 +110,6 @@ namespace DAL.Repositories
             return products;
         }
 
-        
+
     }
 }

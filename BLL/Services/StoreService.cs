@@ -4,20 +4,19 @@ using BLL.Infrasructure;
 using BLL.Mappers;
 using DAL.Entities;
 using DAL.Exceptions;
-using DAL.Infrastructure;
+using DAL.Managers.Interfaces;
+using DAL.Repositories.Interfaces;
 
 namespace BLL.Services
 {
     public class StoreService: IStoreService
     {
-        private IStoreRepository _storeRepository;
-        private IProductRepository _productRepository;
+        private IStoreRepoManager _storeRepoManager;
         private IStoreMapper _storeMapper;
 
-        public StoreService(IStoreRepository storeRepository, IProductRepository productRepository, IStoreMapper storeMapper) 
+        public StoreService(IStoreRepoManager storeRepoManager, IStoreMapper storeMapper) 
         {
-            _storeRepository = storeRepository;
-            _productRepository = productRepository;
+            _storeRepoManager = storeRepoManager;
             _storeMapper = storeMapper;
         }
 
@@ -25,7 +24,7 @@ namespace BLL.Services
         {
             bool found = false;
 
-            var dalStores = _storeRepository.GetAll();
+            var dalStores = _storeRepoManager.GetStores();
 
             foreach (var dalStore in dalStores)
             {
@@ -41,21 +40,21 @@ namespace BLL.Services
 
             var dalStore = _storeMapper.MapStore(store);
 
-            _storeRepository.AddProducts(dalStore);
+            _storeRepoManager.AddProductsToStore(dalStore);
         }
 
         public void CreateProduct(BLL.DTO.Product product)
         {
             var dalProduct = _storeMapper.MapProduct(product);
 
-            _productRepository.Create(dalProduct);
+            _storeRepoManager.CreateProduct(dalProduct);
         }
 
         public void CreateStore(BLL.DTO.Store store)
         {
             var dalStore = _storeMapper.MapStore(store);
 
-            _storeRepository.Create(dalStore);
+            _storeRepoManager.CreateStore(dalStore);
         }
 
         public int DeleteProductsFromStore(BLL.DTO.Store store)
@@ -66,7 +65,7 @@ namespace BLL.Services
 
             try
             {
-                int summ = _storeRepository.RemoveProducts(dalStore);
+                int summ = _storeRepoManager.DeleteProductsFromStore(dalStore);
                 return summ;
             }
             catch (DAL.Exceptions.ProductUnavailableException ex) { throw new BLL.Exceptions.ProductUnavailableException(ex.Message); }
@@ -79,14 +78,7 @@ namespace BLL.Services
 
             try
             {
-                var assortment = _storeRepository.Get(_storeMapper.MapStore(store));
-
-                foreach (var product in assortment.Products)
-                {
-                    int count = cache / product.Cost;
-
-                    if (count <= product.Count) product.Count = count;
-                }
+                var assortment = _storeRepoManager.CalculateAffordableItems(_storeMapper.MapStore(store), cache);
 
                 var bllStore = _storeMapper.MapStore(assortment);
 
@@ -95,12 +87,11 @@ namespace BLL.Services
 
             catch (DAL.Exceptions.ProductNotExistException ex) { throw new BLL.Exceptions.ProductNotExistException(ex.Message); }
 
-            
         }
 
         public BLL.DTO.BestPriceLocation GetBestPriceLocation(List<DTO.Product> products)
         {
-            var dalStores = _storeRepository.GetAll();
+            var dalStores = _storeRepoManager.GetStores();
 
             // Используем Dictionary для хранения общей суммы и количества товаров по каждому магазину
             Dictionary<int, int> storeSums = new Dictionary<int, int>();
@@ -122,7 +113,7 @@ namespace BLL.Services
                 foreach (var product in products)
                 {
                     var dalProduct = _storeMapper.MapProduct(product);
-                    var storePrices = _productRepository.GetProductCosts(dalProduct);
+                    var storePrices = _storeRepoManager.GetProductCosts(dalProduct);
 
                     foreach (var entry in storePrices)
                     {
@@ -170,7 +161,7 @@ namespace BLL.Services
         {
             var stores = new List<BLL.DTO.Store>();
 
-            var dalStores = _storeRepository.GetAll();
+            var dalStores = _storeRepoManager.GetStores();
 
             foreach (var store in dalStores) 
             {
@@ -185,7 +176,7 @@ namespace BLL.Services
         {
             var products = new List<BLL.DTO.Product>();
 
-            var dalProducts = _productRepository.GetAll();
+            var dalProducts = _storeRepoManager.GetProducts();
 
             foreach (var product in dalProducts)
             {
@@ -201,7 +192,7 @@ namespace BLL.Services
         {
             if (!ChechStoreExistence(store)) { throw new StoreNotExistException($"Магазина {store.Id} не существует!"); }
 
-            var dalStore = _storeRepository.Get(_storeMapper.MapStore(store));
+            var dalStore = _storeRepoManager.GetStoreAssortment(_storeMapper.MapStore(store));
 
             var bllStore = _storeMapper.MapStore(dalStore);
 

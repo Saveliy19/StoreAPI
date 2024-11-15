@@ -1,17 +1,17 @@
 ﻿using DAL.Entities;
 using DAL.Exceptions;
-using DAL.Infrastructure;
+using DAL.Repositories.Interfaces;
 using static System.Formats.Asn1.AsnWriter;
 
-namespace DAL.Repositories
+namespace DAL.Repositories.Sync
 {
-    public class FileStoreRepository : IStoreRepository
+    public class FileStoreRepository : ISyncStoreRepository
     {
         private string _storePath;
         private string _storeProductsPath;
-        private IProductRepository _productRepository;
+        private ISyncProductRepository _productRepository;
 
-        public FileStoreRepository(string storePath, string storeProductsPath, IProductRepository productRepository)
+        public FileStoreRepository(string storePath, string storeProductsPath, ISyncProductRepository productRepository)
         {
             if (!File.Exists(storePath)) File.Create(storePath).Close();
             if (!File.Exists(storeProductsPath)) File.Create(storeProductsPath).Close();
@@ -47,7 +47,7 @@ namespace DAL.Repositories
                 // Поиск нужного товара
                 foreach (var row in storeData)
                 {
-                    
+
                     if (row[0] == store.Id.ToString() && row[1] == product.Name)
                     {
                         if (sign)
@@ -186,7 +186,7 @@ namespace DAL.Repositories
         public Store Get(Store store)
         {
             List<Product> storeProducts = new List<Product>();
-            
+
             using (var reader = new StreamReader(_storeProductsPath))
             {
                 while (!reader.EndOfStream)
@@ -237,7 +237,7 @@ namespace DAL.Repositories
                     stores.Add(store);
                 }
             }
-            
+
 
             return stores;
         }

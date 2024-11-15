@@ -1,8 +1,8 @@
 ﻿using DAL.Entities;
 
-namespace DAL.Infrastructure
+namespace DAL.Repositories.Interfaces
 {
-    public interface IStoreRepository
+    public interface ISyncStoreRepository
     {
         // получение списка всех существующих магазинов
         List<Store> GetAll();
