@@ -36,11 +36,9 @@ namespace DAL.Managers
         {
             Dictionary<int, int> productCosts = new Dictionary<int, int>();
 
-            if (!_useAsync)
-            {
-                productCosts = _syncProductRepository.GetProductCosts(product);
-            }
+            if (!_useAsync) productCosts = _syncProductRepository.GetProductCosts(product);
             
+            else productCosts = _asyncProductRepository.GetProductCosts(product).Result;
 
             return productCosts;
         }
