@@ -7,6 +7,8 @@ namespace DAL.Repositories.Interfaces
     {
         public Task Create(Product product);
 
+        // Получение всех продуктов
+        public Task<List<Product>> GetAll();
 
     }
 }

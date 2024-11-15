@@ -124,11 +124,10 @@ namespace DAL.Managers
         public List<Product> GetProducts()
         {
             var products = new List<Product>();
-            
-            if (!_useAsync)
-            {
-                products = _syncProductRepository.GetAll();
-            }
+
+            if (!_useAsync) products = _syncProductRepository.GetAll();
+
+            else products = _asyncProductRepository.GetAll().Result;
 
             return products;
         }

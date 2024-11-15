@@ -9,7 +9,7 @@ namespace DAL.Repositories.Async
     public class DbProductRepository : IAsyncProductRepository
     {
 
-        private readonly DbContext _context;
+        private readonly StoreDbContext _context;
 
         public DbProductRepository(StoreDbContext context)
         {
@@ -25,6 +25,21 @@ namespace DAL.Repositories.Async
 
             // Сохраняем изменения
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<DAL.Entities.Product>> GetAll()
+        {
+            List<DAL.Entities.Product> products = new List<DAL.Entities.Product>();
+
+            var dbProducts = await _context.Products.ToListAsync();
+
+            foreach (var item in dbProducts)
+            {
+                var product = new DAL.Entities.Product(){ Name = item.Name};
+                products.Add(product);
+            }
+
+            return products;
         }
     }
 }
