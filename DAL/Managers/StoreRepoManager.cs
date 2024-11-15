@@ -50,32 +50,24 @@ namespace DAL.Managers
 
             if (!_useAsync) { stores = _syncStoreRepository.GetAll(); }
 
-            else { }
+            else { stores = _asyncStoreRepository.GetAll().Result; }
 
             return stores;
         }
 
         public void AddProductsToStore(Store store)
         {
-            if (!_useAsync)
-            {
-                _syncStoreRepository.AddProducts(store);
-            }
+            if (!_useAsync) _syncStoreRepository.AddProducts(store);
 
-            else
-            {
-
-            }
+            else _asyncStoreRepository.AddProducts(store);
         }
 
         public Store CalculateAffordableItems(Store store, int cache)
         {
             var assortment = new Store();
             
-            if (!_useAsync)
-            {
-                assortment = _syncStoreRepository.Get(store);
-            }
+            if (!_useAsync) assortment = _syncStoreRepository.Get(store);
+            else assortment = _asyncStoreRepository.Get(store).Result;
 
 
 
@@ -103,18 +95,18 @@ namespace DAL.Managers
 
         public void CreateStore(Store store)
         {
-            if (!_useAsync) { _syncStoreRepository.Create(store); }
-            
+            if (!_useAsync) _syncStoreRepository.Create(store);
+
+            else _asyncStoreRepository.Create(store);
         }
 
         public int DeleteProductsFromStore(Store store)
         {
             int summ = 0;
 
-            if (!_useAsync)
-            {
-                summ = _syncStoreRepository.RemoveProducts(store);
-            }
+            if (!_useAsync) summ = _syncStoreRepository.RemoveProducts(store);
+
+            else summ = _asyncStoreRepository.RemoveProducts(store).Result;
 
             return summ;
         }
@@ -134,11 +126,9 @@ namespace DAL.Managers
         {
             var assortment = store;
 
-            if (!_useAsync)
-            {
-                assortment = _syncStoreRepository.Get(store);
-                
-            }
+            if (!_useAsync) assortment = _syncStoreRepository.Get(store);
+
+            else assortment = _asyncStoreRepository.Get(store).Result;
 
             return assortment;
 

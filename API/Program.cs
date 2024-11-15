@@ -56,7 +56,7 @@ else if (dataSourceType == "Database")
         new DbProductRepository(storeDbContext));
 
     builder.Services.AddScoped<IAsyncStoreRepository>(provider =>
-        new DbStoreRepository());
+        new DbStoreRepository(storeDbContext));
 
     builder.Services.AddScoped<IStoreRepoManager>(provider =>
     {
