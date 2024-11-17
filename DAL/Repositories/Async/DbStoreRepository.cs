@@ -10,7 +10,13 @@ namespace DAL.Repositories.Async
     public class DbStoreRepository : IAsyncStoreRepository
     {
         private StoreDbContext _dbContext;
-        public DbStoreRepository(StoreDbContext dbContext) { _dbContext = dbContext; }
+
+        private IAsyncProductRepository _productRepository;
+        public DbStoreRepository(StoreDbContext dbContext, IAsyncProductRepository productRepository) 
+        { 
+            _dbContext = dbContext;
+            _productRepository = productRepository;
+        }
 
         public async Task Create(DAL.Entities.Store store)
         {
@@ -64,6 +70,8 @@ namespace DAL.Repositories.Async
                 {
                     foreach (var product in store.Products)
                     {
+                        if (!await _productRepository.CheckExistence(product)) { throw new ProductNotExistException($"Продукта {product.Name} не существует!"); }
+
                         var existingStoreProduct = await _dbContext.StoreProducts
                                                               .FirstOrDefaultAsync(sp => sp.StoreId == store.Id && sp.ProductName == product.Name);
 
@@ -90,11 +98,10 @@ namespace DAL.Repositories.Async
 
                     await transaction.CommitAsync();
                 }
-                catch (Exception ex)
+                catch
                 {
                     await transaction.RollbackAsync();
-
-                    throw new Exception("Error occurred while adding product to store", ex);
+                    throw;
                 }
             }
         }
@@ -106,25 +113,35 @@ namespace DAL.Repositories.Async
 
             using (var transaction = await _dbContext.Database.BeginTransactionAsync())
             {
-                bool productFound;
-                foreach (var product in store.Products)
+                try
                 {
-                    productFound = false;
-
-
-                    var existingStoreProduct = await _dbContext.StoreProducts
-                                    .FirstOrDefaultAsync(sp => sp.ProductName == product.Name && sp.StoreId == store.Id);
-
-                    if (existingStoreProduct != null) 
+                    bool productFound;
+                    foreach (var product in store.Products)
                     {
-                        if (existingStoreProduct.Quantity < product.Count) throw new ProductUnavailableException($"Продукт {product.Name} не продается в магазине {product.StoreId} в достаточном количестве");
-                        summ += product.Count * existingStoreProduct.Price;
-                        existingStoreProduct.Quantity -= product.Count;
-                        productFound = true;
-                    } 
+                        productFound = false;
 
-                    if (!productFound) throw new ProductUnavailableException($"Продукт {product.Name} не продается в магазине {product.StoreId}");
+
+                        var existingStoreProduct = await _dbContext.StoreProducts
+                                        .FirstOrDefaultAsync(sp => sp.ProductName == product.Name && sp.StoreId == store.Id);
+
+                        if (existingStoreProduct != null)
+                        {
+                            if (existingStoreProduct.Quantity < product.Count) throw new ProductUnavailableException($"Продукт {product.Name} не продается в магазине {product.StoreId} в достаточном количестве");
+                            summ += product.Count * existingStoreProduct.Price;
+                            existingStoreProduct.Quantity -= product.Count;
+                            productFound = true;
+                        }
+
+                        if (!productFound) throw new ProductUnavailableException($"Продукт {product.Name} не продается в магазине {product.StoreId}");
+                    }
                 }
+                catch (Exception) 
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+
+                
             }      
 
             return summ;

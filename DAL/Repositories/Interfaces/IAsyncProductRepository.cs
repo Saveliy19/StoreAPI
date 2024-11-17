@@ -16,5 +16,7 @@ namespace DAL.Repositories.Interfaces
         // получения словаря id магазина : стоимость товара
         public Task<Dictionary<int, int>> GetProductCosts(Product product);
 
+        public Task<bool> CheckExistence(Product product);
+
     }
 }

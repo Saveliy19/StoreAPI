@@ -18,6 +18,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(typeof(Models.NewProduct), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         public IActionResult CreateProduct([FromBody] NewProduct product)
@@ -33,10 +34,9 @@ namespace API.Controllers
                 return Ok(product);
             }
 
-            catch (Exception ex)
-            {
-                return StatusCode(500, "An error occurred on the server.");
-            }
+            catch (AlreadyExistException ex) { return BadRequest(ex.Message); }
+
+            catch (Exception) { return StatusCode(500, "An error occurred on the server."); }
         }
 
         [HttpGet]
@@ -50,7 +50,7 @@ namespace API.Controllers
 
                 var bllProducts = _storeService.GetProducts();
 
-                foreach (var product in bllProducts) 
+                foreach (var product in bllProducts)
                 {
                     var new_product = new Models.NewProduct { Name = product.Name };
                     products.Add(new_product);
@@ -59,10 +59,7 @@ namespace API.Controllers
                 return Ok(products);
             }
 
-            catch (Exception ex)
-            {
-                return StatusCode(500, "An error occurred on the server.");
-            }
+            catch (Exception ex) { return StatusCode(500, "An error occurred on the server."); }
         }
 
 
@@ -103,16 +100,14 @@ namespace API.Controllers
 
                 return Ok(response);
             }
-            catch (ProductUnavailableException ex)
+
+            catch (Exception ex)
+            when (ex is ProductNotExistException || ex is ProductUnavailableException)
             {
                 return NotFound(ex.Message);
             }
 
-            catch (Exception ex)
-            {
-                // _logger.LogError(ex, "An error occurred while fetching the cheapest store.");
-                return StatusCode(500, "An error occurred on the server.");
-            }
+            catch (Exception ex) { return StatusCode(500, "An error occurred on the server."); }
         }
 
 

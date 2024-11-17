@@ -36,102 +36,134 @@ namespace DAL.Managers
         {
             Dictionary<int, int> productCosts = new Dictionary<int, int>();
 
-            if (!_useAsync) productCosts = _syncProductRepository.GetProductCosts(product);
-            
-            else productCosts = _asyncProductRepository.GetProductCosts(product).Result;
+            try
+            {
+                if (!_useAsync) productCosts = _syncProductRepository.GetProductCosts(product);
 
-            return productCosts;
+                else productCosts = _asyncProductRepository.GetProductCosts(product).GetAwaiter().GetResult();
+
+                return productCosts;
+            }
+            catch (Exception) { throw; }            
         }
 
         public List<Store> GetStores()
         {
             var stores = new List<Store>();
 
+            try
+            {
+                if (!_useAsync) { stores = _syncStoreRepository.GetAll(); }
 
-            if (!_useAsync) { stores = _syncStoreRepository.GetAll(); }
+                else { stores = _asyncStoreRepository.GetAll().GetAwaiter().GetResult(); }
 
-            else { stores = _asyncStoreRepository.GetAll().Result; }
-
-            return stores;
+                return stores;
+            }
+            catch (Exception) { throw; }            
         }
 
         public void AddProductsToStore(Store store)
         {
-            if (!_useAsync) _syncStoreRepository.AddProducts(store);
+            try
+            {
+                if (!_useAsync) _syncStoreRepository.AddProducts(store);
 
-            else _asyncStoreRepository.AddProducts(store);
+                else _asyncStoreRepository.AddProducts(store).GetAwaiter().GetResult();
+            }
+            catch (Exception) { throw; }            
         }
 
         public Store CalculateAffordableItems(Store store, int cache)
         {
             var assortment = new Store();
-            
-            if (!_useAsync) assortment = _syncStoreRepository.Get(store);
-            else assortment = _asyncStoreRepository.Get(store).Result;
 
-
-
-            foreach (var product in assortment.Products)
+            try
             {
-                int count = cache / product.Cost;
+                if (!_useAsync) assortment = _syncStoreRepository.Get(store);
+                else assortment = _asyncStoreRepository.Get(store).GetAwaiter().GetResult();
 
-                if (count <= product.Count) product.Count = count;
+                foreach (var product in assortment.Products)
+                {
+                    int count = cache / product.Cost;
+
+                    if (count <= product.Count) product.Count = count;
+                }
+
+                return assortment;
             }
-
-            return assortment;
+            catch (Exception) { throw; }          
         }
 
         public void CreateProduct(Product product)
         {
-            if (!_useAsync)
+            try
             {
-                _syncProductRepository.Create(product);
-                return;
+                if (!_useAsync)
+                {
+                    _syncProductRepository.Create(product);
+                    return;
+                }
+
+                _asyncProductRepository.Create(product).GetAwaiter().GetResult(); ;
             }
-
-            _asyncProductRepository.Create(product);
-
+            catch (Exception) { throw; }
         }
 
         public void CreateStore(Store store)
         {
-            if (!_useAsync) _syncStoreRepository.Create(store);
+            try
+            {
+                if (!_useAsync) _syncStoreRepository.Create(store);
 
-            else _asyncStoreRepository.Create(store);
+                else _asyncStoreRepository.Create(store).GetAwaiter().GetResult(); ;
+            }
+            catch (Exception) { throw; }
+            
         }
 
         public int DeleteProductsFromStore(Store store)
         {
             int summ = 0;
 
-            if (!_useAsync) summ = _syncStoreRepository.RemoveProducts(store);
+            try
+            {
+                if (!_useAsync) summ = _syncStoreRepository.RemoveProducts(store);
 
-            else summ = _asyncStoreRepository.RemoveProducts(store).Result;
+                else summ = _asyncStoreRepository.RemoveProducts(store).GetAwaiter().GetResult(); ;
 
-            return summ;
+                return summ;
+            }
+            catch (Exception) { throw; }            
         }
 
         public List<Product> GetProducts()
         {
             var products = new List<Product>();
 
-            if (!_useAsync) products = _syncProductRepository.GetAll();
+            try
+            {
+                if (!_useAsync) products = _syncProductRepository.GetAll();
 
-            else products = _asyncProductRepository.GetAll().Result;
+                else products = _asyncProductRepository.GetAll().GetAwaiter().GetResult(); ;
 
-            return products;
+                return products;
+            }
+            catch (Exception) { throw; }            
         }
 
         public Store GetStoreAssortment(Store store)
         {
             var assortment = store;
 
-            if (!_useAsync) assortment = _syncStoreRepository.Get(store);
+            try
+            {
+                if (!_useAsync) assortment = _syncStoreRepository.Get(store);
 
-            else assortment = _asyncStoreRepository.Get(store).Result;
+                else assortment = _asyncStoreRepository.Get(store).GetAwaiter().GetResult(); ;
 
-            return assortment;
-
+                return assortment;
+            }
+            catch (Exception) { throw; }        
         }
     }
 }

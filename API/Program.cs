@@ -8,6 +8,7 @@ using DAL.Repositories.Async;
 using DAL.Managers.Interfaces;
 using DAL.Managers;
 using DAL.DataBase;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,7 +57,7 @@ else if (dataSourceType == "Database")
         new DbProductRepository(storeDbContext));
 
     builder.Services.AddScoped<IAsyncStoreRepository>(provider =>
-        new DbStoreRepository(storeDbContext));
+        new DbStoreRepository(storeDbContext, provider.GetRequiredService<IAsyncProductRepository>()));
 
     builder.Services.AddScoped<IStoreRepoManager>(provider =>
     {

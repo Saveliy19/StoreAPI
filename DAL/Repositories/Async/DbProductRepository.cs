@@ -19,6 +19,8 @@ namespace DAL.Repositories.Async
 
         public async Task Create(DAL.Entities.Product product)
         {
+            if (await CheckExistence(product)) throw new AlreadyExistException($"Продукт {product.Name} уже существует!");
+
             var newProduct = new DAL.DataBase.Models.Product { Name = product.Name };
 
             // Асинхронно добавляем продукт
@@ -62,12 +64,18 @@ namespace DAL.Repositories.Async
 
         public async Task<Dictionary<int, int>> GetProductCosts(Entities.Product product)
         {
+            if (!await CheckExistence(product)) throw new ProductNotExistException($"Продукта {product.Name} не существует!");
             Dictionary<int, int> storePrice = new Dictionary<int, int>();
 
             var storesProducts = await _context.StoreProducts
                                                 .Where(sp => sp.ProductName == product.Name)
                                                 .Include(sp => sp.Store)
                                                 .ToListAsync();
+
+            if (storesProducts.Count == 0)
+            {
+                throw new ProductUnavailableException($"Продукт {product.Name} нигде не продается!");
+            }
 
             foreach (var storeProduct in storesProducts)
             {
@@ -77,5 +85,9 @@ namespace DAL.Repositories.Async
             return storePrice;
         }
 
+        public async Task<bool> CheckExistence(Entities.Product product)
+        {
+            return await _context.Products.AnyAsync(p => p.Name == product.Name);
+        }
     }
 }

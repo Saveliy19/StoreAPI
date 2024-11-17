@@ -28,7 +28,7 @@ namespace BLL.Services
 
             foreach (var dalStore in dalStores)
             {
-                if (dalStore.Id == store.Id) { found = true; break; }
+                if (dalStore.Id == store.Id || (dalStore.Name == store.Name && dalStore.Address == store.Address)) { found = true; break; }
             }
 
             return found;
@@ -38,23 +38,40 @@ namespace BLL.Services
         {
             if (!ChechStoreExistence(store)) { throw new StoreNotExistException($"Магазина {store.Id} не существует!"); }
 
-            var dalStore = _storeMapper.MapStore(store);
+            try
+            {
+                var dalStore = _storeMapper.MapStore(store);
 
-            _storeRepoManager.AddProductsToStore(dalStore);
+                _storeRepoManager.AddProductsToStore(dalStore);
+            }
+
+            catch (DAL.Exceptions.ProductNotExistException ex) { throw new BLL.Exceptions.ProductNotExistException(ex.Message); }
         }
 
         public void CreateProduct(BLL.DTO.Product product)
         {
-            var dalProduct = _storeMapper.MapProduct(product);
+            try
+            {
+                var dalProduct = _storeMapper.MapProduct(product);
 
-            _storeRepoManager.CreateProduct(dalProduct);
+                _storeRepoManager.CreateProduct(dalProduct);
+            }
+            catch (DAL.Exceptions.AlreadyExistException ex) { throw new BLL.Exceptions.AlreadyExistException(ex.Message); }
+
+            catch (Exception) { throw; }            
         }
 
         public void CreateStore(BLL.DTO.Store store)
         {
-            var dalStore = _storeMapper.MapStore(store);
+            if (ChechStoreExistence(store)) throw new BLL.Exceptions.AlreadyExistException($"Магазин {store.Name}, расположенный по адресу {store.Address} уже существует!");
+            try
+            {
+                var dalStore = _storeMapper.MapStore(store);
 
-            _storeRepoManager.CreateStore(dalStore);
+                _storeRepoManager.CreateStore(dalStore);
+            }
+            // обработка ошибки уже существует
+            catch(Exception) { throw; }
         }
 
         public int DeleteProductsFromStore(BLL.DTO.Store store)
@@ -69,24 +86,19 @@ namespace BLL.Services
                 return summ;
             }
             catch (DAL.Exceptions.ProductUnavailableException ex) { throw new BLL.Exceptions.ProductUnavailableException(ex.Message); }
+
+            catch (DAL.Exceptions.ProductNotExistException ex) { throw new BLL.Exceptions.ProductNotExistException(ex.Message); }
         }
 
         public BLL.DTO.Store CalculateAffordableItems(BLL.DTO.Store store, int cache)
         {
-
             if (!ChechStoreExistence(store)) { throw new StoreNotExistException($"Магазина {store.Id} не существует!"); }
 
-            try
-            {
-                var assortment = _storeRepoManager.CalculateAffordableItems(_storeMapper.MapStore(store), cache);
+            var assortment = _storeRepoManager.CalculateAffordableItems(_storeMapper.MapStore(store), cache);
 
-                var bllStore = _storeMapper.MapStore(assortment);
+            var bllStore = _storeMapper.MapStore(assortment);
 
-                return bllStore;
-            }
-
-            catch (DAL.Exceptions.ProductNotExistException ex) { throw new BLL.Exceptions.ProductNotExistException(ex.Message); }
-
+            return bllStore;
         }
 
         public BLL.DTO.BestPriceLocation GetBestPriceLocation(List<DTO.Product> products)
@@ -131,6 +143,8 @@ namespace BLL.Services
             }
 
             catch (DAL.Exceptions.ProductUnavailableException ex) { throw new BLL.Exceptions.ProductUnavailableException(ex.Message); }
+
+            catch (DAL.Exceptions.ProductNotExistException ex) { throw new BLL.Exceptions.ProductNotExistException(ex.Message); }
 
 
             // Поиск магазина с наименьшей стоимостью, учитывая только те магазины, где доступны все товары

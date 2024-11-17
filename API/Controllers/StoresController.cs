@@ -28,18 +28,15 @@ namespace API.Controllers
 
                 var bllStores = _storeService.GetStores();
 
-                foreach (var store in bllStores) 
+                foreach (var store in bllStores)
                 {
-                    var new_store = new Store() { Id = store.Id, Name = store.Name, Address = store.Address};
+                    var new_store = new Store() { Id = store.Id, Name = store.Name, Address = store.Address };
                     stores.Add(new_store);
                 }
 
                 return Ok(stores);
             }
-            catch (Exception)
-            {
-                return StatusCode(500, "An error occurred on the server.");
-            }
+            catch (Exception) { return StatusCode(500, "An error occurred on the server."); }
         }
 
         [HttpGet("{storeId}/Assortment")]
@@ -50,7 +47,7 @@ namespace API.Controllers
         {
             try
             {
-                var bllAssortment = _storeService.GetStoreAssortment(new BLL.DTO.Store() { Id = storeId});
+                var bllAssortment = _storeService.GetStoreAssortment(new BLL.DTO.Store() { Id = storeId });
 
                 var products = new List<Product>();
 
@@ -64,16 +61,9 @@ namespace API.Controllers
                 return Ok(new StoreAssortment() { Products = products, Id = bllAssortment.Id });
             }
 
-            catch (StoreNotExistException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            catch (StoreNotExistException ex) { return NotFound(ex.Message); }
 
-
-            catch (Exception)
-            {
-                return StatusCode(500, "An error occurred on the server.");
-            }
+            catch (Exception) { return StatusCode(500, "An error occurred on the server."); }
         }
 
 
@@ -94,10 +84,9 @@ namespace API.Controllers
                 return Ok(newStore);
             }
 
-            catch (Exception ex)
-            {
-                return StatusCode(500, "An error occurred on the server.");
-            }
+            catch (AlreadyExistException ex) { return BadRequest(ex.Message); }
+
+            catch (Exception) { return StatusCode(500, "An error occurred on the server."); }
 
         }
 
@@ -120,19 +109,13 @@ namespace API.Controllers
                 return Ok(new AffordableProducts() { Products = products, StoreId = bllStore.Id });
             }
 
-            catch (StoreNotExistException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            catch (StoreNotExistException ex) { return NotFound(ex.Message); }
 
-            catch (Exception ex)
-            {
-                return StatusCode(500, "An error occurred on the server.");
-            }
+            catch (Exception ex) { return StatusCode(500, "An error occurred on the server."); }
         }
 
         [HttpPatch("{storeId}/Assortment/Restock")]
-        [ProducesResponseType(201)]
+        [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
@@ -154,18 +137,15 @@ namespace API.Controllers
                     bllProducts.Add(bllProduct);
                 }
                 _storeService.AddProductsToStore(new BLL.DTO.Store() { Id = storeId, Products = bllProducts });
-                return StatusCode(201);
+                return Ok(storeAssortment);
             }
 
-            catch (StoreNotExistException ex)
+            catch (Exception ex) when (ex is StoreNotExistException || ex is ProductNotExistException)
             {
                 return NotFound(ex.Message);
             }
 
-            catch (Exception)
-            {
-                return StatusCode(500, "An error occurred on the server.");
-            }
+            catch (Exception) { return StatusCode(500, "An error occurred on the server."); }
         }
 
 
@@ -195,14 +175,10 @@ namespace API.Controllers
                 return Ok(summ);
             }
 
-            catch (StoreNotExistException ex)
+            catch (Exception ex) 
+            when (ex is StoreNotExistException || ex is ProductUnavailableException || ex is ProductNotExistException)
             {
                 return NotFound(ex.Message);
-            }
-
-            catch (ProductUnavailableException ex) 
-            {
-                return BadRequest(ex.Message);
             }
 
             catch (Exception)
