@@ -6,6 +6,7 @@ using DAL.Entities;
 using DAL.Exceptions;
 using DAL.Managers.Interfaces;
 using DAL.Repositories.Interfaces;
+using System.Linq.Expressions;
 
 namespace BLL.Services
 {
@@ -103,71 +104,59 @@ namespace BLL.Services
 
         public BLL.DTO.BestPriceLocation GetBestPriceLocation(List<DTO.Product> products)
         {
-            var dalStores = _storeRepoManager.GetStores();
-
-            // Используем Dictionary для хранения общей суммы и количества товаров по каждому магазину
-            Dictionary<int, int> storeSums = new Dictionary<int, int>();
-            Dictionary<int, int> storeProductCounts = new Dictionary<int, int>();
-
-            // Общее количество позиций продуктов, которые нужно купить
-            int positionsCount = products.Count;
-
-            // Инициализируем суммы и счетчики для всех магазинов
-            foreach (var store in dalStores)
-            {
-                storeSums[store.Id] = 0;
-                storeProductCounts[store.Id] = 0;
-            }
+            Dictionary<int, int> storeAmount = new Dictionary<int, int>();
+            Dictionary<int, int> storePositionsCount = new Dictionary<int, int>();
 
             try
             {
-                // Рассчитываем сумму стоимости товаров в каждом магазине
                 foreach (var product in products)
                 {
                     var dalProduct = _storeMapper.MapProduct(product);
-                    var storePrices = _storeRepoManager.GetProductCosts(dalProduct);
-
-                    foreach (var entry in storePrices)
+                    var storesSellingProduct = _storeRepoManager.GetStoresSellingProduct(dalProduct);
+                    foreach (var store in storesSellingProduct)
                     {
-                        int storeId = entry.Key;
-                        int pricePerUnit = entry.Value;
-
-                        // Добавляем сумму за этот товар и увеличиваем счётчик товаров, доступных в магазине
-                        if (storeSums.ContainsKey(storeId))
+                        if (store[2] >= product.Quantity)
                         {
-                            storeSums[storeId] += pricePerUnit * dalProduct.Count;
-                            storeProductCounts[storeId]++;
+                            if (storeAmount.ContainsKey(store[0]))
+                            {
+                                storeAmount[store[0]] += store[1] * product.Quantity;
+                                storePositionsCount[store[0]]++;
+                            }
+                            else
+                            {
+                                storeAmount[store[0]] = store[1] * product.Quantity;
+                                storePositionsCount[store[0]] = 1;
+                            }
                         }
                     }
                 }
             }
-
-            catch (DAL.Exceptions.ProductUnavailableException ex) { throw new BLL.Exceptions.ProductUnavailableException(ex.Message); }
-
             catch (DAL.Exceptions.ProductNotExistException ex) { throw new BLL.Exceptions.ProductNotExistException(ex.Message); }
+            
+
+            BLL.DTO.BestPriceLocation cheapestLocation = new BLL.DTO.BestPriceLocation();
+            int minAmount = int.MaxValue;
+            int cheapestId = -1;
 
 
-            // Поиск магазина с наименьшей стоимостью, учитывая только те магазины, где доступны все товары
-            int bestStoreId = -1;
-            int lowestCost = int.MaxValue;
-
-            foreach (var storeId in storeSums.Keys)
+            foreach (var entry in storePositionsCount)
             {
-                if (storeProductCounts[storeId] == positionsCount && storeSums[storeId] < lowestCost)
+                if (entry.Value == products.Count && storeAmount[entry.Key] <= minAmount)
                 {
-                    lowestCost = storeSums[storeId];
-                    bestStoreId = storeId;
+                    cheapestId = entry.Key;
+                    minAmount = storeAmount[entry.Key];
                 }
             }
 
-            // Если подходящего магазина не найдено
-            if (bestStoreId == -1)
-            {
-                throw new StoreNotExistException("Не найдено магазина, в котором можно купить все перечисленные товары");
-            }
+            if (cheapestId == -1) throw new StoreNotExistException("Не существует магазина, в котором есть все продукты в необходимом количестве!");
 
-            var bestStore = _storeMapper.MapStore(dalStores.FirstOrDefault(s => s.Id == bestStoreId));
-            return new DTO.BestPriceLocation { PriceSumm = lowestCost, Store = bestStore };
+            var bestStore = _storeMapper.MapStore(_storeRepoManager.GetStores().FirstOrDefault(s => s.Id == cheapestId));
+
+            cheapestLocation.PriceSumm = minAmount;
+            cheapestLocation.Store = bestStore;
+
+            return cheapestLocation;
+
         }
 
 

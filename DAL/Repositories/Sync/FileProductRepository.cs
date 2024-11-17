@@ -110,6 +110,9 @@ namespace DAL.Repositories.Sync
             return products;
         }
 
-
+        public List<int[]> GetStoresSellingProduct(Product product)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

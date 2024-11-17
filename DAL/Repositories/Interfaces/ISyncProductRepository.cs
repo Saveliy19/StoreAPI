@@ -14,7 +14,7 @@ namespace DAL.Repositories.Interfaces
         public Product Get(Product product);
 
         // получения словаря id магазина : стоимость товара
-        public Dictionary<int, int> GetProductCosts(Product product);
+        public List<int[]> GetStoresSellingProduct(Product product);
 
 
     }

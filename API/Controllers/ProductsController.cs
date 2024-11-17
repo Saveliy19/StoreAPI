@@ -82,11 +82,6 @@ namespace API.Controllers
 
                 var cheapestStore = _storeService.GetBestPriceLocation(bllProducts);
 
-                if (cheapestStore == null)
-                {
-                    return NotFound("No store has all requested products.");
-                }
-
                 var response = new Models.CheapestLocation
                 {
                     PriceSumm = cheapestStore.PriceSumm,
@@ -102,12 +97,12 @@ namespace API.Controllers
             }
 
             catch (Exception ex)
-            when (ex is ProductNotExistException || ex is ProductUnavailableException)
+            when (ex is ProductNotExistException || ex is ProductUnavailableException || ex is StoreNotExistException)
             {
                 return NotFound(ex.Message);
             }
 
-            catch (Exception ex) { return StatusCode(500, "An error occurred on the server."); }
+            catch (Exception ex) { return StatusCode(500, ex.Message); }
         }
 
 

@@ -38,7 +38,7 @@ namespace DAL.Repositories.Async
 
             if (storeProduct == null)
             {
-                throw new ProductNotExistException($"Продукта {product.Name} не продается в магазине {product.StoreId}");
+                throw new ProductUnavailableException($"Продукта {product.Name} не продается в магазине {product.StoreId}");
             }
 
             product.Count = storeProduct.Quantity;
@@ -62,10 +62,16 @@ namespace DAL.Repositories.Async
             return products;
         }
 
-        public async Task<Dictionary<int, int>> GetProductCosts(Entities.Product product)
+        public async Task<bool> CheckExistence(Entities.Product product)
+        {
+            return await _context.Products.AnyAsync(p => p.Name == product.Name);
+        }
+
+        public async Task<List<int[]>> GetStoresSellingProduct(Entities.Product product)
         {
             if (!await CheckExistence(product)) throw new ProductNotExistException($"Продукта {product.Name} не существует!");
-            Dictionary<int, int> storePrice = new Dictionary<int, int>();
+
+            List<int[]> storesSellingProduct = new List<int[]>();
 
             var storesProducts = await _context.StoreProducts
                                                 .Where(sp => sp.ProductName == product.Name)
@@ -79,15 +85,10 @@ namespace DAL.Repositories.Async
 
             foreach (var storeProduct in storesProducts)
             {
-                storePrice[storeProduct.StoreId] = storeProduct.Price;
+                storesSellingProduct.Add(new int[3] { storeProduct.StoreId, storeProduct.Price, storeProduct.Quantity });
             }
 
-            return storePrice;
-        }
-
-        public async Task<bool> CheckExistence(Entities.Product product)
-        {
-            return await _context.Products.AnyAsync(p => p.Name == product.Name);
+            return storesSellingProduct;
         }
     }
 }

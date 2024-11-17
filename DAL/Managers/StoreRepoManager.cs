@@ -1,5 +1,6 @@
 ﻿
 using DAL.Entities;
+using DAL.Exceptions;
 using DAL.Managers.Interfaces;
 using DAL.Repositories.Async;
 using DAL.Repositories.Interfaces;
@@ -32,17 +33,32 @@ namespace DAL.Managers
             _asyncProductRepository = asyncProductRepository;
         }
 
-        public Dictionary<int, int> GetProductCosts(Product product)
+        public bool IsStockAvailable(Product product)
         {
-            Dictionary<int, int> productCosts = new Dictionary<int, int>();
+            try
+            {
+                var quantity = product.Count;
+                if (!_useAsync) product = _syncProductRepository.Get(product);
+                else product = _asyncProductRepository.Get(product).GetAwaiter().GetResult();
+
+                if (product.Count >= quantity) return true;
+                return false;
+            }
+            catch (ProductUnavailableException) { return false; }
+        }
+
+
+        public List<int[]> GetStoresSellingProduct(Product product)
+        {
 
             try
             {
-                if (!_useAsync) productCosts = _syncProductRepository.GetProductCosts(product);
+                var storesSellingProduct = new List<int[]>();
+                if (!_useAsync) storesSellingProduct = _syncProductRepository.GetStoresSellingProduct(product);
 
-                else productCosts = _asyncProductRepository.GetProductCosts(product).GetAwaiter().GetResult();
+                else storesSellingProduct = _asyncProductRepository.GetStoresSellingProduct(product).GetAwaiter().GetResult();
 
-                return productCosts;
+                return storesSellingProduct;
             }
             catch (Exception) { throw; }            
         }

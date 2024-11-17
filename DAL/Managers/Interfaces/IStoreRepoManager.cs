@@ -13,6 +13,9 @@ namespace DAL.Managers.Interfaces
         // завоз товара в магазин
         public void AddProductsToStore(Store store);
 
+        // Проверка доступности товара в конкретном магазине в нужном количестве
+        public bool IsStockAvailable(Product product);
+
         // покупка/списание партии товара в магазине
         public int DeleteProductsFromStore(Store store);
 
@@ -31,6 +34,8 @@ namespace DAL.Managers.Interfaces
         // получение списка всех продуктов
         public List<Product> GetProducts();
 
-        public Dictionary<int, int> GetProductCosts(Product product);
+        // список магазинов, в которых продается продукт
+        // айди магазина | стоимость товара | количество
+        public List<int[]> GetStoresSellingProduct(Product product);
     }
 }
