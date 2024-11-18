@@ -4,33 +4,28 @@ using DAL.Exceptions;
 using DAL.Managers.Interfaces;
 using DAL.Repositories.Async;
 using DAL.Repositories.Interfaces;
+using DAL.Repositories.Strategies;
 
 namespace DAL.Managers
 {
     public class StoreRepoManager: IStoreRepoManager
     {
-        private readonly bool _useAsync;
+        private IStoreStrategy _strategy;
 
-        private readonly ISyncStoreRepository? _syncStoreRepository;
-        private readonly ISyncProductRepository? _syncProductRepository;
-
-        private readonly IAsyncStoreRepository? _asyncStoreRepository;
-        private readonly IAsyncProductRepository? _asyncProductRepository;
-
-        // Конструктор для синхронного режима
         public StoreRepoManager(ISyncProductRepository syncProductRepository, ISyncStoreRepository syncStoreRepository)
         {
-            _useAsync = false;
-            _syncStoreRepository = syncStoreRepository;
-            _syncProductRepository = syncProductRepository;
+            _strategy = new SyncStoreStrategy(syncStoreRepository, syncProductRepository);
         }
 
-        // Конструктор для асинхронного режима
         public StoreRepoManager(IAsyncProductRepository asyncProductRepository, IAsyncStoreRepository asyncStoreRepository)
         {
-            _useAsync = true;
-            _asyncStoreRepository = asyncStoreRepository;
-            _asyncProductRepository = asyncProductRepository;
+            _strategy = new AsyncStoreStrategy(asyncStoreRepository, asyncProductRepository);
+        }
+
+
+        public void SetStrategy(IStoreStrategy newStrategy)
+        {
+            _strategy = newStrategy;
         }
 
         public bool IsStockAvailable(Product product)
@@ -38,148 +33,31 @@ namespace DAL.Managers
             try
             {
                 var quantity = product.Count;
-                if (!_useAsync) product = _syncProductRepository.Get(product);
-                else product = _asyncProductRepository.Get(product).GetAwaiter().GetResult();
-
-                if (product.Count >= quantity) return true;
+                product = _strategy.GetProduct(product);
+                return product.Count >= quantity;
+            }
+            catch (ProductUnavailableException)
+            {
                 return false;
             }
-            catch (ProductUnavailableException) { return false; }
         }
 
+        public List<int[]> GetStoresSellingProduct(Product product) => _strategy.GetStoresSellingProduct(product);
 
-        public List<int[]> GetStoresSellingProduct(Product product)
-        {
+        public List<Store> GetStores() => _strategy.GetStores();
 
-            try
-            {
-                var storesSellingProduct = new List<int[]>();
-                if (!_useAsync) storesSellingProduct = _syncProductRepository.GetStoresSellingProduct(product);
+        public void AddProductsToStore(Store store) => _strategy.AddProductsToStore(store);
 
-                else storesSellingProduct = _asyncProductRepository.GetStoresSellingProduct(product).GetAwaiter().GetResult();
+        public Store CalculateAffordableItems(Store store, int cache) => _strategy.CalculateAffordableItems(store, cache);
 
-                return storesSellingProduct;
-            }
-            catch (Exception) { throw; }            
-        }
+        public void CreateProduct(Product product) => _strategy.CreateProduct(product);
 
-        public List<Store> GetStores()
-        {
-            var stores = new List<Store>();
+        public void CreateStore(Store store) => _strategy.CreateStore(store);
 
-            try
-            {
-                if (!_useAsync) { stores = _syncStoreRepository.GetAll(); }
+        public int DeleteProductsFromStore(Store store) => _strategy.DeleteProductsFromStore(store);
 
-                else { stores = _asyncStoreRepository.GetAll().GetAwaiter().GetResult(); }
+        public List<Product> GetProducts() => _strategy.GetProducts();
 
-                return stores;
-            }
-            catch (Exception) { throw; }            
-        }
-
-        public void AddProductsToStore(Store store)
-        {
-            try
-            {
-                if (!_useAsync) _syncStoreRepository.AddProducts(store);
-
-                else _asyncStoreRepository.AddProducts(store).GetAwaiter().GetResult();
-            }
-            catch (Exception) { throw; }            
-        }
-
-        public Store CalculateAffordableItems(Store store, int cache)
-        {
-            var assortment = new Store();
-
-            try
-            {
-                if (!_useAsync) assortment = _syncStoreRepository.Get(store);
-                else assortment = _asyncStoreRepository.Get(store).GetAwaiter().GetResult();
-
-                foreach (var product in assortment.Products)
-                {
-                    int count = cache / product.Cost;
-
-                    if (count <= product.Count) product.Count = count;
-                }
-
-                return assortment;
-            }
-            catch (Exception) { throw; }          
-        }
-
-        public void CreateProduct(Product product)
-        {
-            try
-            {
-                if (!_useAsync)
-                {
-                    _syncProductRepository.Create(product);
-                    return;
-                }
-
-                _asyncProductRepository.Create(product).GetAwaiter().GetResult(); ;
-            }
-            catch (Exception) { throw; }
-        }
-
-        public void CreateStore(Store store)
-        {
-            try
-            {
-                if (!_useAsync) _syncStoreRepository.Create(store);
-
-                else _asyncStoreRepository.Create(store).GetAwaiter().GetResult(); ;
-            }
-            catch (Exception) { throw; }
-            
-        }
-
-        public int DeleteProductsFromStore(Store store)
-        {
-            int summ = 0;
-
-            try
-            {
-                if (!_useAsync) summ = _syncStoreRepository.RemoveProducts(store);
-
-                else summ = _asyncStoreRepository.RemoveProducts(store).GetAwaiter().GetResult(); ;
-
-                return summ;
-            }
-            catch (Exception) { throw; }            
-        }
-
-        public List<Product> GetProducts()
-        {
-            var products = new List<Product>();
-
-            try
-            {
-                if (!_useAsync) products = _syncProductRepository.GetAll();
-
-                else products = _asyncProductRepository.GetAll().GetAwaiter().GetResult(); ;
-
-                return products;
-            }
-            catch (Exception) { throw; }            
-        }
-
-        public Store GetStoreAssortment(Store store)
-        {
-            var assortment = store;
-
-            try
-            {
-                if (!_useAsync) assortment = _syncStoreRepository.Get(store);
-
-                else assortment = _asyncStoreRepository.Get(store).GetAwaiter().GetResult(); ;
-
-                return assortment;
-            }
-            catch (Exception) { throw; }        
-        }
+        public Store GetStoreAssortment(Store store) => _strategy.GetStoreAssortment(store);
     }
 }
