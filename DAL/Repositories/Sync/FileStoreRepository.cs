@@ -112,7 +112,7 @@ namespace DAL.Repositories.Sync
                     {
                         productFound = true;
                         int currentCount = int.Parse(row[3]) - product.Count;
-                        if (currentCount > 0)
+                        if (currentCount >= 0)
                         {
                             summ += product.Count * int.Parse(row[2]);
                             row[3] = currentCount.ToString();
@@ -153,7 +153,7 @@ namespace DAL.Repositories.Sync
 
             var newStore = new List<string>
             {
-                storesData.Count.ToString(),
+                (storesData.Count + 1).ToString(),
                 store.Name,
                 store.Address
             };

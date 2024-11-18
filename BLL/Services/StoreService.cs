@@ -71,7 +71,7 @@ namespace BLL.Services
 
                 _storeRepoManager.CreateStore(dalStore);
             }
-            // обработка ошибки уже существует
+
             catch(Exception) { throw; }
         }
 
@@ -132,7 +132,8 @@ namespace BLL.Services
                 }
             }
             catch (DAL.Exceptions.ProductNotExistException ex) { throw new BLL.Exceptions.ProductNotExistException(ex.Message); }
-            
+            catch (DAL.Exceptions.ProductUnavailableException ex) { throw new BLL.Exceptions.ProductUnavailableException(ex.Message); }
+
 
             BLL.DTO.BestPriceLocation cheapestLocation = new BLL.DTO.BestPriceLocation();
             int minAmount = int.MaxValue;
