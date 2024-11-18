@@ -16,6 +16,6 @@ namespace DAL.Repositories.Interfaces
         // получения словаря id магазина : стоимость товара
         public List<int[]> GetStoresSellingProduct(Product product);
 
-
+        public bool CheckExistence(Product product);
     }
 }

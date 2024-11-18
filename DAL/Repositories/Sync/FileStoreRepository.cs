@@ -20,82 +20,67 @@ namespace DAL.Repositories.Sync
             _productRepository = productRepository;
         }
 
-        public void UpdateInStore(Store store, bool sign)
+        public void AddProducts(Store store)
         {
-            // Считываем строки в список строк
-            List<List<string>> storeData = new List<List<string>>();
-
-            using (var reader = new StreamReader(_storeProductsPath))
             {
-                while (!reader.EndOfStream)
+                // Считываем строки в список строк
+                List<List<string>> storeData = new List<List<string>>();
+
+                using (var reader = new StreamReader(_storeProductsPath))
                 {
-                    var line = reader.ReadLine();
-                    var values = new List<string>(line.Split(','));
-                    storeData.Add(values);
-                }
-            }
-
-            // Обработка товаров магазина
-            foreach (var product in store.Products)
-            {
-                // удостоверяемя, что продукт с таким именем уже существует
-                // или создаем его
-                _productRepository.Create(product);
-
-                bool found = false;
-
-                // Поиск нужного товара
-                foreach (var row in storeData)
-                {
-
-                    if (row[0] == store.Id.ToString() && row[1] == product.Name)
+                    while (!reader.EndOfStream)
                     {
-                        if (sign)
-                        {
-                            row[2] = product.Cost.ToString();
-                            int currentCount = int.Parse(row[3]);
-                            row[3] = (currentCount + product.Count).ToString();
-                        }
-
-                        else
-                        {
-                            int currentCount = int.Parse(row[3]) - product.Count;
-                            if (currentCount > 0) row[3] = currentCount.ToString();
-                            else row[3] = "0";
-                        }
-                        found = true;
-                        break;
+                        var line = reader.ReadLine();
+                        var values = new List<string>(line.Split(','));
+                        storeData.Add(values);
                     }
                 }
 
-                if (sign && !found)
+                // Обработка товаров магазина
+                foreach (var product in store.Products)
                 {
-                    var newRow = new List<string>
+                    // удостоверяемся, что продукт с таким именем уже существует
+                    if (!_productRepository.CheckExistence(product)) throw new ProductNotExistException($"Продукта ${product.Name} не существует!");
+
+                    bool found = false;
+
+                    // Поиск нужного товара
+                    foreach (var row in storeData)
                     {
-                        store.Id.ToString(),
-                        product.Name,
-                        product.Cost.ToString(),
-                        product.Count.ToString()
-                    };
-                    storeData.Add(newRow);
+                        if (row[0] == store.Id.ToString() && row[1] == product.Name)
+                        {
+                            // Добавляем товар
+                            row[2] = product.Cost.ToString();
+                            int currentCount = int.Parse(row[3]);
+                            row[3] = (currentCount + product.Count).ToString();
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    // Если товар не найден, добавляем новый
+                    if (!found)
+                    {
+                        var newRow = new List<string>
+                        {
+                            store.Id.ToString(),
+                            product.Name,
+                            product.Cost.ToString(),
+                            product.Count.ToString()
+                        };
+                        storeData.Add(newRow);
+                    }
                 }
 
-
-            }
-
-            // Перезапись данных в файл
-            using (var writer = new StreamWriter(_storeProductsPath))
-            {
-                foreach (var row in storeData)
+                // Перезапись данных в файл
+                using (var writer = new StreamWriter(_storeProductsPath))
                 {
-                    writer.WriteLine(string.Join(",", row));
+                    foreach (var row in storeData)
+                    {
+                        writer.WriteLine(string.Join(",", row));
+                    }
                 }
             }
-        }
-
-        public void AddProducts(Store store)
-        {
-            UpdateInStore(store, true);
         }
 
         public int RemoveProducts(Store store)
@@ -117,7 +102,7 @@ namespace DAL.Repositories.Sync
 
             foreach (var product in store.Products)
             {
-
+                if (!_productRepository.CheckExistence(product)) throw new ProductNotExistException($"Продукта ${product.Name} не существует!");
                 bool productFound = false;
 
                 foreach (var row in storeData)
